@@ -175,7 +175,7 @@ func (r *queueResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	var q, err = r.client.DeleteQueue(state.Id.ValueString())
+	var _, err = r.client.DeleteQueue(state.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Deleting Queue",
@@ -183,9 +183,6 @@ func (r *queueResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		)
 		return
 	}
-
-	state.Id = types.StringValue(q.Id)
-	state.Alias = types.StringValue(q.Alias)
 
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)

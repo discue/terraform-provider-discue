@@ -15,13 +15,9 @@ type RequestOptions struct {
 	Body         any
 }
 
-type ApiResource struct {
+type Queue struct {
 	Id    string `json:"id,omitempty"`
 	Alias string `json:"alias"`
-}
-
-type Queue struct {
-	*ApiResource
 }
 
 type QueueReponse struct {

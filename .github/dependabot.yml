@@ -3,10 +3,15 @@
 version: 2
 updates:
   - package-ecosystem: "gomod"
+    assignees:
+      - stfsy
     directory: "/"
     schedule:
       interval: "weekly"
-  - package-ecosystem: "github-actions"
-    directory: "/"
+
+  - package-ecosystem: github-actions
+    assignees:
+      - stfsy
+    directory: /
     schedule:
-      interval: "weekly"
+      interval: weekly

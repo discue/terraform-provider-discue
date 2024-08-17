@@ -91,10 +91,8 @@ func (r *queueResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	queue := client.Queue{
-		ApiResource: &client.ApiResource{
-			Id:    plan.Id.ValueString(),
-			Alias: plan.Alias.ValueString(),
-		},
+		Id:    plan.Id.ValueString(),
+		Alias: plan.Alias.ValueString(),
 	}
 	var q, err = r.client.CreateQueue(queue)
 
@@ -150,9 +148,7 @@ func (r *queueResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	queue := client.Queue{
-		ApiResource: &client.ApiResource{
-			Alias: plan.Alias.ValueString(),
-		},
+		Alias: plan.Alias.ValueString(),
 	}
 
 	var q, err = r.client.UpdateQueue(state.Id.ValueString(), queue)

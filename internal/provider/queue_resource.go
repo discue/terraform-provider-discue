@@ -56,7 +56,7 @@ func (r *queueResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(21, 22),
 					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^{useandom26T198340PX75pxJACKVERYMINDBUSHWOLFGQZbfghjklqvwyzrict-}[21]$`),
+						regexp.MustCompile(`^[useandom26T198340PX75pxJACKVERYMINDBUSHWOLFGQZbfghjklqvwyzrict-]{21}$`),
 						"must match the pattern for string id values",
 					),
 				},

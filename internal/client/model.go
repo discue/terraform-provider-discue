@@ -20,6 +20,11 @@ type Queue struct {
 	Alias string `json:"alias"`
 }
 
-type QueueResponse struct {
-	Queue any `json:"queue"`
+type Domain struct {
+	Id    string `json:"id,omitempty"`
+	Alias string `json:"alias"`
+}
+
+type ApiResponse[T any] struct {
+	Response T `json:"-"` // Use a custom JSON key
 }

@@ -19,6 +19,31 @@ func NewClient(apiEndpoint string, apiKey *string) (*Client, error) {
 	return &c, nil
 }
 
+func sendAndReceive[T any](c *Client, requestOptions RequestOptions, jsonKey string) (*T, error) {
+	body, err := c.executeRequest(requestOptions)
+	if err != nil {
+		return nil, fmt.Errorf("could not execute request: %w", err)
+	}
+
+	var rawMap map[string]json.RawMessage
+	err = json.Unmarshal(body, &rawMap)
+	if err != nil {
+		return nil, fmt.Errorf("could not unmarshal response body: %w", err)
+	}
+
+	if rawResponse, ok := rawMap[jsonKey]; ok {
+		// Create a pointer to the response type and unmarshal into it
+		responsePtr := new(T)
+		err = json.Unmarshal(rawResponse, responsePtr)
+		if err != nil {
+			return nil, fmt.Errorf("could not unmarshal response: %w", err)
+		}
+		return responsePtr, nil
+	} else {
+		return nil, nil
+	}
+}
+
 func (c *Client) executeRequest(requestOptions RequestOptions) ([]byte, error) {
 	var br io.Reader = nil
 	if requestOptions.Body != nil {

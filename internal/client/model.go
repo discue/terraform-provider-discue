@@ -20,6 +20,6 @@ type Queue struct {
 	Alias string `json:"alias"`
 }
 
-type QueueReponse struct {
+type QueueResponse struct {
 	Queue any `json:"queue"`
 }

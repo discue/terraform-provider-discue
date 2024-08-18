@@ -15,7 +15,7 @@ func sendAndUnmarshal[T any](c *Client, requestOptions RequestOptions) (*T, erro
 	}
 
 	response := new(T)
-	err = json.Unmarshal(body, &QueueReponse{response})
+	err = json.Unmarshal(body, &QueueResponse{response})
 	if err != nil {
 		return nil, err
 	}

@@ -1,66 +1,51 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 )
 
-const queues string = "queues"
-
-func sendAndUnmarshal[T any](c *Client, requestOptions RequestOptions) (*T, error) {
-	body, err := c.executeRequest(requestOptions)
-	if err != nil {
-		return nil, err
-	}
-
-	response := new(T)
-	err = json.Unmarshal(body, &QueueResponse{response})
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
-}
+const queuesResourceName string = "queues"
+const singleQueueResponseKey string = "queue"
 
 func (c *Client) GetQueue(queueId string) (*Queue, error) {
 	requestOptions := RequestOptions{
 		Method:       http.MethodGet,
-		Path:         fmt.Sprintf("/%s/%s", queues, queueId),
+		Path:         fmt.Sprintf("/%s/%s", queuesResourceName, queueId),
 		ExpectStatus: http.StatusOK,
 	}
 
-	return sendAndUnmarshal[Queue](c, requestOptions)
+	return sendAndReceive[Queue](c, requestOptions, singleQueueResponseKey)
 }
 
 func (c *Client) CreateQueue(newQueue Queue) (*Queue, error) {
 	requestOptions := RequestOptions{
 		Body:         newQueue,
 		Method:       http.MethodPost,
-		Path:         fmt.Sprintf("/%s", queues),
+		Path:         fmt.Sprintf("/%s", queuesResourceName),
 		ExpectStatus: http.StatusOK,
 	}
 
-	return sendAndUnmarshal[Queue](c, requestOptions)
+	return sendAndReceive[Queue](c, requestOptions, singleQueueResponseKey)
 }
 
 func (c *Client) UpdateQueue(queueId string, updatedQueue Queue) (*Queue, error) {
 	requestOptions := RequestOptions{
 		Body:         updatedQueue,
 		Method:       http.MethodPut,
-		Path:         fmt.Sprintf("/%s/%s", queues, queueId),
+		Path:         fmt.Sprintf("/%s/%s", queuesResourceName, queueId),
 		ExpectStatus: http.StatusOK,
 	}
 
-	return sendAndUnmarshal[Queue](c, requestOptions)
+	return sendAndReceive[Queue](c, requestOptions, singleQueueResponseKey)
 }
 
 func (c *Client) DeleteQueue(queueId string) (*Queue, error) {
 	requestOptions := RequestOptions{
 		Method:       http.MethodDelete,
-		Path:         fmt.Sprintf("/%s/%s", queues, queueId),
+		Path:         fmt.Sprintf("/%s/%s", queuesResourceName, queueId),
 		ExpectStatus: http.StatusOK,
 	}
 
-	return sendAndUnmarshal[Queue](c, requestOptions)
+	return sendAndReceive[Queue](c, requestOptions, singleQueueResponseKey)
 }

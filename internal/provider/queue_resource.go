@@ -16,8 +16,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-var _ resource.Resource = &queueResource{}
-var _ resource.ResourceWithConfigure = &queueResource{}
+var (
+	_ resource.Resource                = &queueResource{}
+	_ resource.ResourceWithConfigure   = &queueResource{}
+	_ resource.ResourceWithImportState = &queueResource{}
+)
 
 func NewQueueResource() resource.Resource {
 	return &queueResource{}

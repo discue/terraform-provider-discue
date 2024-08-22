@@ -94,11 +94,10 @@ func (r *queueResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	queue := client.Queue{
-		Id:    plan.Id.ValueString(),
 		Alias: plan.Alias.ValueString(),
 	}
-	var q, err = r.client.CreateQueue(queue)
 
+	var q, err = r.client.CreateQueue(queue)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Creating Queue",
@@ -107,8 +106,16 @@ func (r *queueResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	plan.Id = types.StringValue(q.Id)
-	plan.Alias = types.StringValue(q.Alias)
+	q, err = r.client.GetQueue(q.Id)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error reading created Queue",
+			"Could not read queue, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	r.convert(q, &plan)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -131,8 +138,7 @@ func (r *queueResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	state.Id = types.StringValue(q.Id)
-	state.Alias = types.StringValue(q.Alias)
+	r.convert(q, &state)
 
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
@@ -163,8 +169,7 @@ func (r *queueResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	plan.Id = types.StringValue(q.Id)
-	plan.Alias = types.StringValue(q.Alias)
+	r.convert(q, &plan)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)

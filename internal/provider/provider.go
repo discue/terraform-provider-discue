@@ -123,6 +123,7 @@ func (p *discueProvider) DataSources(_ context.Context) []func() datasource.Data
 
 func (p *discueProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
+		NewApiKeyResource,
 		NewDomainResource,
 		NewQueueResource,
 	}

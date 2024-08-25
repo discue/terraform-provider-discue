@@ -6,18 +6,18 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"strings"
 	"terraform-provider-discue/internal/client"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
@@ -36,83 +36,24 @@ type apiKeyResource struct {
 }
 
 type apiKeyResourceModel struct {
-	Key    types.String          `tfsdk:"key"`
-	Id     types.String          `tfsdk:"id"`
-	Alias  types.String          `tfsdk:"alias"`
-	Status types.String          `tfsdk:"status"`
-	Scopes basetypes.ObjectValue `tfsdk:"scopes"`
+	Key    types.String       `tfsdk:"key"`
+	Id     types.String       `tfsdk:"id"`
+	Alias  types.String       `tfsdk:"alias"`
+	Status types.String       `tfsdk:"status"`
+	Scope  []apiKeyScopeModel `tfsdk:"scope"`
 }
 
-type apiKeyScopes struct {
-	Channels  *basetypes.ObjectValue `tfsdk:"channels"`
-	Domains   *basetypes.ObjectValue `tfsdk:"domains"`
-	Events    *basetypes.ObjectValue `tfsdk:"events"`
-	Listeners *basetypes.ObjectValue `tfsdk:"listeners"`
-	Messages  *basetypes.ObjectValue `tfsdk:"messages"`
-	Queues    *basetypes.ObjectValue `tfsdk:"queues"`
-	Schemas   *basetypes.ObjectValue `tfsdk:"schemas"`
-	Stats     *basetypes.ObjectValue `tfsdk:"stats"`
-	Topics    *basetypes.ObjectValue `tfsdk:"topics"`
-}
-
-type apiKeyScope struct {
-	access  types.String `tfsdk:"access"`
-	targets types.List   `tfsdk:"targets"`
+type apiKeyScopeModel struct {
+	Resource string       `tfsdk:"resource"`
+	Access   types.String `tfsdk:"access"`
+	Targets  types.List   `tfsdk:"targets"`
 }
 
 func (r *apiKeyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_api_key"
 }
 
-func createScope(resourceName string) schema.SingleNestedAttribute {
-	return schema.SingleNestedAttribute{
-		Optional:  true,
-		Sensitive: false,
-		Computed:  true,
-		// Default:     nil,
-		Description: fmt.Sprintf("Defines whether the api key can read or write %s resources and whether all or only a subset of all resources can be read or written.", resourceName),
-		Attributes: map[string]schema.Attribute{
-			"access": schema.StringAttribute{
-				Optional:  true,
-				Sensitive: false,
-				Computed:  true,
-				// Default:   nil,
-				Description: "Limits the access to only read or write access. Defaults to \"write\".",
-				Validators: []validator.String{
-					stringvalidator.OneOf("read", "write"),
-				},
-			},
-			"targets": schema.ListAttribute{
-				ElementType: types.StringType,
-				Optional:    true,
-				Sensitive:   false,
-				Computed:    true,
-				Description: "Limits the access to only resources with the specified id. Defaults to [\"*\"] which permits access to all resources.",
-				// Default:     listdefault.StaticValue(types.ListValueMust(types.StringType, []attr.Value{types.StringValue("*")})),
-				Validators: []validator.List{
-					listvalidator.ValueStringsAre(
-						stringvalidator.Any(
-							stringvalidator.OneOf("*"),
-							stringvalidator.RegexMatches(
-								regexp.MustCompile(`^[useandom26T198340PX75pxJACKVERYMINDBUSHWOLFGQZbfghjklqvwyzrict-]{21}$`),
-								"must match the pattern for string id values",
-							),
-						),
-					),
-				},
-			},
-		},
-	}
-}
-
 func (r *apiKeyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	scopes := make(map[string]schema.Attribute)
-
-	for _, resource := range ApiResources {
-		resourceName := strings.ToLower(resource)
-		scopes[strings.ToLower(resourceName)] = createScope(resourceName)
-	}
-
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Api Key resource",
 		Attributes: map[string]schema.Attribute{
@@ -149,17 +90,49 @@ func (r *apiKeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 					stringvalidator.OneOf("enabled", "disabled"),
 				},
 			},
-			"scopes": schema.SingleNestedAttribute{
-				Optional:  true,
-				Sensitive: false,
-				Computed:  true,
-				// Default:     nil,
-				Description: "Scopes define the resources this api key can access and manipulate. If left blank a generous set of default scopes will be added.",
-				Attributes:  scopes,
-			},
 			"key": schema.StringAttribute{
 				Computed:  true,
 				Sensitive: false,
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"scope": schema.ListNestedBlock{ // Use ListNestedBlock or SetNestedBlock
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"resource": schema.StringAttribute{
+							Optional: true,
+							Computed: true,
+							Validators: []validator.String{
+								stringvalidator.OneOf(ApiResources...),
+							},
+						},
+						"access": schema.StringAttribute{
+							Optional: true,
+							Computed: true,
+							Default:  stringdefault.StaticString("write"),
+							Validators: []validator.String{
+								stringvalidator.OneOf("read", "write"),
+							},
+						},
+						"targets": schema.ListAttribute{
+							ElementType: types.StringType,
+							Optional:    true,
+							Computed:    true,
+							Default:     listdefault.StaticValue(types.ListValueMust(types.StringType, []attr.Value{types.StringValue("*")})),
+							Validators: []validator.List{
+								listvalidator.ValueStringsAre(
+									stringvalidator.Any(
+										stringvalidator.OneOf("*"),
+										stringvalidator.RegexMatches(
+											regexp.MustCompile(`^[useandom26T198340PX75pxJACKVERYMINDBUSHWOLFGQZbfghjklqvwyzrict-]{21}$`),
+											"must match the pattern for string id values",
+										),
+									),
+								),
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -184,34 +157,15 @@ func (r *apiKeyResource) Configure(ctx context.Context, req resource.ConfigureRe
 
 func convertScopes(ctx context.Context, plan apiKeyResourceModel) (*client.ApiKeyScopes, error) {
 	result := client.ApiKeyScopes{}
-	attributes := plan.Scopes.Attributes()
 
-	for _, name := range ApiResources {
-		var access string
-		var targets []string
+	for _, scope := range plan.Scope {
+		access := scope.Access.ValueString()
+		targets, _ := TfTypesValueToList(scope.Targets)
 
-		var scopeAttrs = attributes[strings.ToLower(name)].(basetypes.ObjectValue).Attributes()
-
-		var accessAttr = scopeAttrs["access"]
-		if accessAttr != nil {
-			value, _ := accessAttr.ToTerraformValue(ctx)
-			access, _ = TfTypesValueToString(value)
-		}
-
-		var targetsAttr, _ = scopeAttrs["targets"]
-		if targetsAttr != nil {
-			var targetsTf, _ = targetsAttr.ToTerraformValue(ctx)
-			targets, _ = TfTypesValueToList(targetsTf)
-		}
-
-		tflog.Info(ctx, fmt.Sprintf("Converted scope %v %v %v %v", name, scopeAttrs, access, targets))
-		if accessAttr != nil || len(targets) > 0 {
-			tflog.Info(ctx, fmt.Sprintf("Setting value %v %v", access, targets))
-			setValueOf(&result, name, &client.ApiKeyScope{
-				Access:  access,
-				Targets: targets,
-			})
-		}
+		setValueOf(&result, scope.Resource, &client.ApiKeyScope{
+			Access:  access,
+			Targets: targets,
+		})
 	}
 
 	return &result, nil
@@ -230,17 +184,17 @@ func (r *apiKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 		Status: plan.Status.ValueString(),
 	}
 
-	tflog.Info(ctx, fmt.Sprintf(">> Domains %#v domains %#v", plan.Scopes.Attributes()["Domains"], plan.Scopes.Attributes()["domains"]))
-
-	scopes, convertErr := convertScopes(ctx, plan)
-	if convertErr != nil {
-		resp.Diagnostics.AddError(
-			"Error Creating Api Key",
-			"Could not create api key, unexpected error: "+convertErr.Error(),
-		)
-		return
+	if len(plan.Scope) > 0 {
+		scopes, convertErr := convertScopes(ctx, plan)
+		if convertErr != nil {
+			resp.Diagnostics.AddError(
+				"Error Creating Api Key",
+				"Could not create api key, unexpected error: "+convertErr.Error(),
+			)
+			return
+		}
+		key.Scopes = scopes
 	}
-	key.Scopes = scopes
 	tflog.Info(ctx, fmt.Sprintf("API key to be created %#v", key))
 
 	var cK, createErr = r.client.CreateApiKey(key)

@@ -101,32 +101,15 @@ func StringArrayToList(stringList []string) (types.List, error) {
 	return listValue, nil
 }
 
-func TfTypesValueToList(value tftypes.Value) ([]string, error) {
-	// Check if the value is null or unknown
-	if !value.IsKnown() || value.IsNull() {
-		return nil, fmt.Errorf("value is not known or is null")
+func TfTypesValueToList(value attr.Value) ([]string, error) {
+	if value.IsNull() || value.IsUnknown() {
+		return nil, nil
 	}
-
-	// Ensure the value is a list
-	var list []tftypes.Value
-	err := value.As(&list)
-	if err != nil {
-		return nil, fmt.Errorf("value is not a list: %w", err)
+	list := value.(types.List)
+	result := make([]string, len(list.Elements()))
+	for i, elem := range list.Elements() {
+		result[i] = elem.(types.String).ValueString()
 	}
-
-	// Convert each element to the appropriate type
-	result := make([]string, len(list))
-	for i, elem := range list {
-		// Extract the string value
-		var str string
-		err := elem.As(&str)
-		if err != nil {
-			return nil, fmt.Errorf("failed to convert element at index %d to string: %w", i, err)
-		}
-
-		result[i] = str
-	}
-
 	return result, nil
 }
 

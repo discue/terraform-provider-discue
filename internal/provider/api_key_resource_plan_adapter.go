@@ -3,14 +3,9 @@
 package provider
 
 import (
-	"fmt"
-	"log"
-	"strings"
 	"terraform-provider-discue/internal/client"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 func (r *apiKeyResource) convert(d *client.ApiKeyResponse, plan *apiKeyResourceModel) {
@@ -19,43 +14,26 @@ func (r *apiKeyResource) convert(d *client.ApiKeyResponse, plan *apiKeyResourceM
 	plan.Status = types.StringValue(d.Status)
 	plan.Key = types.StringValue(d.Key)
 
-	allScopesAttrValues := make(map[string]attr.Value)
-	allScopesAttrTypes := make(map[string]attr.Type)
+	var scopes []apiKeyScopeModel
 
 	for _, name := range ApiResources {
-		schemaName := strings.ToLower(name)
-
-		singleScopeAttribute := map[string]attr.Type{
-			"access": types.StringType,
-			"targets": types.ListType{
-				ElemType: types.StringType,
-			},
-		}
-
 		value := getValueOf[*client.ApiKeyScope](d.Scopes, name)
-		var targets = getValueOf[[]string](value, "Targets")
-
-		targetsList, _ := StringArrayToList(targets)
-		access := getValueOf[string](value, "Access")
-
-		singleScopeValue := map[string]attr.Value{
-			"access":  types.StringValue(access),
-			"targets": targetsList,
+		if value == nil {
+			continue
 		}
+
+		targets := value.Targets
+		access := value.Access
+		targetsList, _ := StringArrayToList(targets)
 
 		if len(targets) > 0 && len(access) > 0 {
-			log.Println(fmt.Sprintf("Setting scope for %s %#+v %#+v", schemaName, access, targets))
-
-			scopeObject, _ := basetypes.NewObjectValue(singleScopeAttribute, singleScopeValue)
-
-			allScopesAttrTypes[schemaName] = basetypes.ObjectType{
-				AttrTypes: singleScopeAttribute,
-			}
-
-			allScopesAttrValues[schemaName] = scopeObject
+			scopes = append(scopes, apiKeyScopeModel{
+				Resource: name,
+				Access:   types.StringValue(access),
+				Targets:  targetsList,
+			})
 		}
 	}
 
-	allScopes, _ := basetypes.NewObjectValue(allScopesAttrTypes, allScopesAttrValues)
-	plan.Scopes = allScopes
+	plan.Scope = scopes
 }

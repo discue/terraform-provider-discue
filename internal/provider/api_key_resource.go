@@ -169,7 +169,7 @@ func (r *apiKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	payload, err := convertToApiModel(ctx, &plan)
+	payload, err := r.convertToApiModel(ctx, &plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error converting Key",
@@ -251,7 +251,7 @@ func (r *apiKeyResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	payload, err := convertToApiModel(ctx, &plan)
+	payload, err := r.convertToApiModel(ctx, &plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error converting Key",

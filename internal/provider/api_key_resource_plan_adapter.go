@@ -81,7 +81,7 @@ func convertScopesFromApiModel(scopes client.ApiKeyScopes) (basetypes.ListValue,
 	return listValue, nil
 }
 
-func convertToApiModel(ctx context.Context, plan *apiKeyResourceModel) (client.ApiKeyRequest, error) {
+func (r *apiKeyResource) convertToApiModel(ctx context.Context, plan *apiKeyResourceModel) (client.ApiKeyRequest, error) {
 	req := client.ApiKeyRequest{
 		Alias:  plan.Alias.ValueString(),
 		Status: plan.Status.ValueString(),

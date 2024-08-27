@@ -94,7 +94,7 @@ func (r *queueResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	payload, err := r.convertQueueToApiModel(ctx, &plan)
+	payload, err := r.convertToApiModel(ctx, &plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error converting queue",
@@ -121,7 +121,7 @@ func (r *queueResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	err = r.convertQueueToInternalModel(q, &plan)
+	err = r.convertFromApiModel(q, &plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error converting queue from api model",
@@ -151,7 +151,7 @@ func (r *queueResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	err = r.convertQueueToInternalModel(q, &state)
+	err = r.convertFromApiModel(q, &state)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error converting queue from api model",
@@ -176,7 +176,7 @@ func (r *queueResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	payload, err := r.convertQueueToApiModel(ctx, &plan)
+	payload, err := r.convertToApiModel(ctx, &plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error converting queue",
@@ -194,7 +194,7 @@ func (r *queueResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	err = r.convertQueueToInternalModel(q, &plan)
+	err = r.convertFromApiModel(q, &plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error converting queue from api model",

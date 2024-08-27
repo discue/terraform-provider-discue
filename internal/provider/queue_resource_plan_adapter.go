@@ -9,13 +9,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func (r *queueResource) convertQueueToApiModel(_ctx context.Context, plan *QueueResourceModel) (client.Queue, error) {
+func (r *queueResource) convertToApiModel(_ctx context.Context, plan *QueueResourceModel) (client.Queue, error) {
 	return client.Queue{
 		Alias: plan.Alias.ValueString(),
 	}, nil
 }
 
-func (r *queueResource) convertQueueToInternalModel(d *client.Queue, plan *QueueResourceModel) error {
+func (r *queueResource) convertFromApiModel(d *client.Queue, plan *QueueResourceModel) error {
 	plan.Id = types.StringValue(d.Id)
 	plan.Alias = types.StringValue(d.Alias)
 

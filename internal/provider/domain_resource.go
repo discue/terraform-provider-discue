@@ -193,7 +193,7 @@ func (r *domainResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	payload, err := r.convertDomainToApiModel(ctx, &plan)
+	payload, err := r.convertToApiModel(ctx, &plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error converting domain to API model",
@@ -220,7 +220,7 @@ func (r *domainResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	_, err = r.convertDomainToInternalModel(d, &plan)
+	_, err = r.convertFromApiModel(d, &plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error converting Domain to internal model",
@@ -250,7 +250,7 @@ func (r *domainResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	_, err = r.convertDomainToInternalModel(d, &state)
+	_, err = r.convertFromApiModel(d, &state)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error converting Domain to internal model",
@@ -275,7 +275,7 @@ func (r *domainResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	payload, err := r.convertDomainToApiModel(ctx, &plan)
+	payload, err := r.convertToApiModel(ctx, &plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error converting domain to API model",
@@ -304,7 +304,7 @@ func (r *domainResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	_, err = r.convertDomainToInternalModel(d, &plan)
+	_, err = r.convertFromApiModel(d, &plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error converting Domain to internal model",

@@ -217,7 +217,14 @@ func (r *domainResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	r.convert(d, &plan)
+	_, err = r.convertDomainToInternalModel(d, &plan)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error converting Domain to internal model",
+			err.Error(),
+		)
+		return
+	}
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -240,7 +247,14 @@ func (r *domainResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	r.convert(d, &state)
+	_, err = r.convertDomainToInternalModel(d, &state)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error converting Domain to internal model",
+			err.Error(),
+		)
+		return
+	}
 
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
@@ -280,7 +294,14 @@ func (r *domainResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	r.convert(d, &plan)
+	_, err = r.convertDomainToInternalModel(d, &plan)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error converting Domain to internal model",
+			err.Error(),
+		)
+		return
+	}
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)

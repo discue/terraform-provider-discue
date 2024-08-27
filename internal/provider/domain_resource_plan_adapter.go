@@ -3,6 +3,7 @@
 package provider
 
 import (
+	"fmt"
 	"terraform-provider-discue/internal/client"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -10,13 +11,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-func (r *domainResource) convert(d *client.DomainResponse, plan *DomainResourceModel) *DomainResourceModel {
+func (r *domainResource) convertDomainToInternalModel(d *client.DomainResponse, plan *DomainResourceModel) (*DomainResourceModel, error) {
 	plan.Id = types.StringValue(d.Id)
 	plan.Alias = types.StringValue(d.Alias)
 	plan.Port = types.Int32Value(d.Port)
 	plan.Hostname = types.StringValue(d.Hostname)
 
-	// Convert DomainVerification to basetypes.ObjectValue
+	var err error
+	plan.Verification, err = convertDomainVerification(d)
+	if err != nil {
+		return plan, err
+	}
+
+	plan.Challenge, err = convertChallenges(d)
+	return plan, err
+}
+
+func convertDomainVerification(d *client.DomainResponse) (basetypes.ObjectValue, error) {
 	verificationAttrTypes := map[string]attr.Type{
 		"verified":    types.BoolType,
 		"verified_at": types.Int64Type,
@@ -27,53 +38,47 @@ func (r *domainResource) convert(d *client.DomainResponse, plan *DomainResourceM
 		"verified_at": types.Int64Value(d.Verification.VerifiedAt),
 	}
 
-	verificationObjectValue, _ := basetypes.NewObjectValue(verificationAttrTypes, verificationAttrValues)
-	plan.Verification = verificationObjectValue
+	verificationObjectValue, diags := basetypes.NewObjectValue(verificationAttrTypes, verificationAttrValues)
+	if diags.HasError() {
+		return basetypes.ObjectValue{}, DiagsToStructuredError("Unable to create object types and attrs for domain challenge", diags)
+	}
+	return verificationObjectValue, nil
+}
 
-	plan.Challenge = func() basetypes.ObjectValue {
-		// Define the attribute types for DomainChallenge
-		domainChallengeAttrTypes := map[string]attr.Type{
-			"https": basetypes.ObjectType{
-				AttrTypes: map[string]attr.Type{
-					"file_content": types.StringType,
-					"file_name":    types.StringType,
-					"context_path": types.StringType,
-					"created_at":   types.Int64Type,
-					"expires_at":   types.Int64Type,
-				},
+func convertChallenges(d *client.DomainResponse) (basetypes.ObjectValue, error) {
+	domainChallengeAttrTypes := map[string]attr.Type{
+		"https": basetypes.ObjectType{
+			AttrTypes: map[string]attr.Type{
+				"file_content": types.StringType,
+				"file_name":    types.StringType,
+				"context_path": types.StringType,
+				"created_at":   types.Int64Type,
+				"expires_at":   types.Int64Type,
 			},
-		}
+		},
+	}
 
-		// Define the attribute values for HttpDomainChallenge
-		httpChallengeAttrValues := map[string]attr.Value{
-			"file_content": types.StringValue(d.Challenge.Https.FileContent),
-			"file_name":    types.StringValue(d.Challenge.Https.FileName),
-			"context_path": types.StringValue(d.Challenge.Https.ContextPath),
-			"created_at":   types.Int64Value(d.Challenge.Https.CreatedAt),
-			"expires_at":   types.Int64Value(d.Challenge.Https.ExpiresAt),
-		}
+	httpChallengeAttrValues := map[string]attr.Value{
+		"file_content": types.StringValue(d.Challenge.Https.FileContent),
+		"file_name":    types.StringValue(d.Challenge.Https.FileName),
+		"context_path": types.StringValue(d.Challenge.Https.ContextPath),
+		"created_at":   types.Int64Value(d.Challenge.Https.CreatedAt),
+		"expires_at":   types.Int64Value(d.Challenge.Https.ExpiresAt),
+	}
 
-		// Create a new ObjectValue for HttpDomainChallenge
-		httpChallengeObjVal, err := basetypes.NewObjectValue(domainChallengeAttrTypes["https"].(basetypes.ObjectType).AttrTypes, httpChallengeAttrValues)
-		if err != nil {
-			// Handle the error appropriately
-			return basetypes.NewObjectNull(nil)
-		}
+	httpChallengeObjVal, diags := basetypes.NewObjectValue(domainChallengeAttrTypes["https"].(basetypes.ObjectType).AttrTypes, httpChallengeAttrValues)
+	if diags.HasError() {
+		return basetypes.ObjectValue{}, DiagsToStructuredError("Unable to create object value for https challenge", diags)
+	}
 
-		// Define the attribute values for DomainChallenge
-		domainChallengeAttrValues := map[string]attr.Value{
-			"https": httpChallengeObjVal,
-		}
+	domainChallengeAttrValues := map[string]attr.Value{
+		"https": httpChallengeObjVal,
+	}
 
-		// Create a new ObjectValue for DomainChallenge
-		domainChallengeObjVal, err := basetypes.NewObjectValue(domainChallengeAttrTypes, domainChallengeAttrValues)
-		if err != nil {
-			// Handle the error appropriately
-			return basetypes.NewObjectNull(nil)
-		}
+	domainChallengeObjVal, diags := basetypes.NewObjectValue(domainChallengeAttrTypes, domainChallengeAttrValues)
+	if diags.HasError() {
+		return basetypes.ObjectValue{}, DiagsToStructuredError(fmt.Sprintf("Unable to create doamin challenge object value"), diags)
+	}
 
-		return domainChallengeObjVal
-	}()
-
-	return plan
+	return domainChallengeObjVal, nil
 }

@@ -35,8 +35,9 @@ func sendAndReceive[T any](c *Client, requestOptions RequestOptions, jsonKey str
 		// Create a pointer to the response type and unmarshal into it
 		responsePtr := new(T)
 		err = json.Unmarshal(rawResponse, responsePtr)
+
 		if err != nil {
-			return nil, fmt.Errorf("could not unmarshal response: %w", err)
+			return nil, fmt.Errorf("could not unmarshal response: %w %s %s", err, rawMap, rawResponse)
 		}
 		return responsePtr, nil
 	} else {

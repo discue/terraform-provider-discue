@@ -44,8 +44,8 @@ func (r *queueResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 		MarkdownDescription: "Queue resource",
 		Attributes: map[string]schema.Attribute{
 			"alias": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The name/alias of the resource. This should be unique.",
+				Required:    true,
+				Description: "The name/alias of the resource. This should be unique.",
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(4, 64),
 					stringvalidator.RegexMatches(
@@ -55,7 +55,8 @@ func (r *queueResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				},
 			},
 			"id": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The unique id of the resource.",
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(21, 22),
 					stringvalidator.RegexMatches(

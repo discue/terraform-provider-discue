@@ -8,7 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func (r *queueResource) convert(d *client.Queue, plan *QueueResourceModel) {
+func (r *queueResource) convertQueueToInternalModel(d *client.Queue, plan *QueueResourceModel) error {
 	plan.Id = types.StringValue(d.Id)
 	plan.Alias = types.StringValue(d.Alias)
+
+	return nil
 }

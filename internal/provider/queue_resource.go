@@ -116,7 +116,14 @@ func (r *queueResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	r.convert(q, &plan)
+	err = r.convertQueueToInternalModel(q, &plan)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error converting queue from api model",
+			"Unexpected error: "+err.Error(),
+		)
+		return
+	}
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -139,7 +146,14 @@ func (r *queueResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	r.convert(q, &state)
+	err = r.convertQueueToInternalModel(q, &state)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error converting queue from api model",
+			"Unexpected error: "+err.Error(),
+		)
+		return
+	}
 
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
@@ -170,7 +184,14 @@ func (r *queueResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	r.convert(q, &plan)
+	err = r.convertQueueToInternalModel(q, &plan)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error converting queue from api model",
+			"Unexpected error: "+err.Error(),
+		)
+		return
+	}
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)

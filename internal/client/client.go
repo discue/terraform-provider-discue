@@ -40,9 +40,9 @@ func sendAndReceive[T any](c *Client, requestOptions RequestOptions, jsonKey str
 			return nil, fmt.Errorf("could not unmarshal response: %w %s %s", err, rawMap, rawResponse)
 		}
 		return responsePtr, nil
-	} else {
-		return nil, nil
 	}
+
+	return nil, fmt.Errorf("could not unmarshal resource from response: %s", rawMap)
 }
 
 func (c *Client) executeRequest(requestOptions RequestOptions) ([]byte, error) {

@@ -11,7 +11,6 @@ const (
 	// It is also possible to use environment variables instead
 	providerConfig = `
 provider "discue" {
-  api_key="6vkK9NpVfWjRDbJ5Tob3uNwslDTPcm0Iag91XXHmP335es4dFTzHuLQxkzfYim9v" 
 }
 
 `

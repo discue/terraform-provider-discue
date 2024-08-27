@@ -47,5 +47,5 @@ func (c *Client) DeleteDomain(domainId string) (*DomainResponse, error) {
 		ExpectStatus: http.StatusOK,
 	}
 
-	return sendAndReceive[DomainResponse](c, requestOptions, singleDomainResponseKey)
+	return sendAndReceive[DomainResponse](c, requestOptions, "_links") // because delete requests will not have an entity in the response
 }

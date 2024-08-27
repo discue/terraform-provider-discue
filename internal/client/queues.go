@@ -47,5 +47,5 @@ func (c *Client) DeleteQueue(queueId string) (*Queue, error) {
 		ExpectStatus: http.StatusOK,
 	}
 
-	return sendAndReceive[Queue](c, requestOptions, singleQueueResponseKey)
+	return sendAndReceive[Queue](c, requestOptions, "_links") // because delete requests will not have an entity in the response
 }

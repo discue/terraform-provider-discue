@@ -47,5 +47,5 @@ func (c *Client) DeleteApiKey(apiKeyId string) (*ApiKeyResponse, error) {
 		ExpectStatus: http.StatusOK,
 	}
 
-	return sendAndReceive[ApiKeyResponse](c, requestOptions, singleKeyResponseName)
+	return sendAndReceive[ApiKeyResponse](c, requestOptions, "_links") // because delete requests will not have an entity in the response
 }

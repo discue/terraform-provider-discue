@@ -3,6 +3,7 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"terraform-provider-discue/internal/client"
 
@@ -10,6 +11,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
+
+func (r *domainResource) convertDomainToApiModel(_ctx context.Context, plan *DomainResourceModel) (client.DomainRequest, error) {
+	return client.DomainRequest{
+		Alias:    plan.Alias.ValueString(),
+		Hostname: plan.Hostname.ValueString(),
+		Port:     convertStringToNumber(plan.Port.String()),
+	}, nil
+}
 
 func (r *domainResource) convertDomainToInternalModel(d *client.DomainResponse, plan *DomainResourceModel) (*DomainResourceModel, error) {
 	plan.Id = types.StringValue(d.Id)

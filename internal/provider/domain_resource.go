@@ -193,13 +193,16 @@ func (r *domainResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	domain := client.DomainRequest{
-		Alias:    plan.Alias.ValueString(),
-		Hostname: plan.Hostname.ValueString(),
-		Port:     convertStringToNumber(plan.Port.String()),
+	payload, err := r.convertDomainToApiModel(ctx, &plan)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error converting domain to API model",
+			"Could not convert domain, unexpected error: "+err.Error(),
+		)
+		return
 	}
 
-	var d, err = r.client.CreateDomain(domain)
+	d, err := r.client.CreateDomain(payload)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Creating Domain",
@@ -272,11 +275,18 @@ func (r *domainResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	domain := client.DomainRequest{
-		Alias: plan.Alias.ValueString(),
+	payload, err := r.convertDomainToApiModel(ctx, &plan)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error converting domain to API model",
+			"Could not convert domain, unexpected error: "+err.Error(),
+		)
+		return
 	}
+	payload.Hostname = "" // not allowed to update hostname
+	payload.Port = 0      // not allowed to update port
 
-	var d, err = r.client.UpdateDomain(state.Id.ValueString(), domain)
+	_, err = r.client.UpdateDomain(state.Id.ValueString(), payload)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Updating Domain",
@@ -285,7 +295,7 @@ func (r *domainResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	d, err = r.client.GetDomain(state.Id.ValueString())
+	d, err := r.client.GetDomain(state.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Created Domain",

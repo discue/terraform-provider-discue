@@ -4,7 +4,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 	"terraform-provider-discue/internal/client"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -86,7 +85,7 @@ func convertChallenges(d *client.DomainResponse) (basetypes.ObjectValue, error) 
 
 	domainChallengeObjVal, diags := basetypes.NewObjectValue(domainChallengeAttrTypes, domainChallengeAttrValues)
 	if diags.HasError() {
-		return basetypes.ObjectValue{}, DiagsToStructuredError(fmt.Sprintf("Unable to create doamin challenge object value"), diags)
+		return basetypes.ObjectValue{}, DiagsToStructuredError("Unable to create doamin challenge object value", diags)
 	}
 
 	return domainChallengeObjVal, nil

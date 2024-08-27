@@ -172,7 +172,7 @@ func (r *apiKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 	payload, err := r.convertToApiModel(ctx, &plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error converting Key",
+			"Error converting api key to API model",
 			"Could not convert api key, unexpected error: "+err.Error(),
 		)
 		return
@@ -181,7 +181,7 @@ func (r *apiKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 	k, err := r.client.CreateApiKey(payload)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Creating Api Key",
+			"Error creating api key via API",
 			"Could not create api key, unexpected error: "+err.Error(),
 		)
 		return
@@ -190,7 +190,7 @@ func (r *apiKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 	k, err = r.client.GetApiKey(k.Id)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Created Api Key",
+			"Error reading api key via API",
 			"Could not read api key, unexpected error: "+err.Error(),
 		)
 		return
@@ -198,7 +198,9 @@ func (r *apiKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	_, err = r.convertFromApiModel(k, &plan)
 	if err != nil {
-		resp.Diagnostics.AddError("Error converting API response", "Unexpected error: "+err.Error())
+		resp.Diagnostics.AddError(
+			"Error converting api key received from API to internal model",
+			"Could not convert api key, unexpected error: "+err.Error())
 		return
 	}
 	tflog.Info(ctx, fmt.Sprintf("Done Reading api client %s", plan))
@@ -219,7 +221,7 @@ func (r *apiKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 	k, err := r.client.GetApiKey(state.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Created Api Key",
+			"Error reading api key via API",
 			"Could not read api key, unexpected error: "+err.Error(),
 		)
 		return
@@ -227,7 +229,9 @@ func (r *apiKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	_, err = r.convertFromApiModel(k, &state)
 	if err != nil {
-		resp.Diagnostics.AddError("Error converting API response", "Unexpected error: "+err.Error())
+		resp.Diagnostics.AddError(
+			"Error converting api key received from API to internal model",
+			"Could not convert api key, unexpected error: "+err.Error())
 		return
 	}
 	tflog.Info(ctx, fmt.Sprintf("Done Reading api client %s", state))
@@ -254,7 +258,7 @@ func (r *apiKeyResource) Update(ctx context.Context, req resource.UpdateRequest,
 	payload, err := r.convertToApiModel(ctx, &plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error converting Key",
+			"Error converting api key to API model",
 			"Could not convert api key, unexpected error: "+err.Error(),
 		)
 		return
@@ -263,8 +267,8 @@ func (r *apiKeyResource) Update(ctx context.Context, req resource.UpdateRequest,
 	k, err := r.client.UpdateApiKey(state.Id.ValueString(), payload)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Creating Api Key",
-			"Could not create api key, unexpected error: "+err.Error(),
+			"Error updating api key via API",
+			"Could not update api key, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -272,14 +276,17 @@ func (r *apiKeyResource) Update(ctx context.Context, req resource.UpdateRequest,
 	k, err = r.client.GetApiKey(k.Id)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Created Api Key",
+			"Error reading api key via API",
 			"Could not read api key, unexpected error: "+err.Error(),
 		)
 		return
 	}
+
 	_, err = r.convertFromApiModel(k, &state)
 	if err != nil {
-		resp.Diagnostics.AddError("Error converting API response", "Unexpected error: "+err.Error())
+		resp.Diagnostics.AddError(
+			"Error converting api key received from API to internal model",
+			"Could not convert api key, unexpected error: "+err.Error())
 		return
 	}
 	tflog.Info(ctx, fmt.Sprintf("Done Reading api client %s", state))
@@ -299,7 +306,7 @@ func (r *apiKeyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	_, err := r.client.DeleteApiKey(state.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Deleting Api Key",
+			"Error deleting api key via API",
 			"Could not delete api key, unexpected error: "+err.Error(),
 		)
 		return

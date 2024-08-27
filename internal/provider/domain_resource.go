@@ -205,7 +205,7 @@ func (r *domainResource) Create(ctx context.Context, req resource.CreateRequest,
 	d, err := r.client.CreateDomain(payload)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Creating Domain",
+			"Error creating domain via API",
 			"Could not create domain, unexpected error: "+err.Error(),
 		)
 		return
@@ -214,7 +214,7 @@ func (r *domainResource) Create(ctx context.Context, req resource.CreateRequest,
 	d, err = r.client.GetDomain(d.Id)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Created Domain",
+			"Error reading domain via API",
 			"Could not read domain, unexpected error: "+err.Error(),
 		)
 		return
@@ -223,9 +223,9 @@ func (r *domainResource) Create(ctx context.Context, req resource.CreateRequest,
 	_, err = r.convertFromApiModel(d, &plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error converting Domain to internal model",
-			err.Error(),
-		)
+			"Error converting domain received from API to internal model",
+			"Could not convert domain, unexpected error: "+err.Error())
+
 		return
 	}
 
@@ -244,7 +244,7 @@ func (r *domainResource) Read(ctx context.Context, req resource.ReadRequest, res
 	var d, err = r.client.GetDomain(state.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Created Domain",
+			"Error reading domain via API",
 			"Could not read domain, unexpected error: "+err.Error(),
 		)
 		return
@@ -253,9 +253,8 @@ func (r *domainResource) Read(ctx context.Context, req resource.ReadRequest, res
 	_, err = r.convertFromApiModel(d, &state)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error converting Domain to internal model",
-			err.Error(),
-		)
+			"Error converting domain received from API to internal model",
+			"Could not convert domain, unexpected error: "+err.Error())
 		return
 	}
 
@@ -289,8 +288,8 @@ func (r *domainResource) Update(ctx context.Context, req resource.UpdateRequest,
 	_, err = r.client.UpdateDomain(state.Id.ValueString(), payload)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Updating Domain",
-			fmt.Sprintf("Could not update domain %s, unexpected error: %s", plan.Id.ValueString(), err.Error()),
+			"Error updating domain via API",
+			"Could not update domain, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -298,7 +297,7 @@ func (r *domainResource) Update(ctx context.Context, req resource.UpdateRequest,
 	d, err := r.client.GetDomain(state.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Created Domain",
+			"Error reading domain via API",
 			"Could not read domain, unexpected error: "+err.Error(),
 		)
 		return
@@ -307,9 +306,8 @@ func (r *domainResource) Update(ctx context.Context, req resource.UpdateRequest,
 	_, err = r.convertFromApiModel(d, &plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error converting Domain to internal model",
-			err.Error(),
-		)
+			"Error converting domain received from API to internal model",
+			"Could not convert domain, unexpected error: "+err.Error())
 		return
 	}
 
@@ -328,7 +326,7 @@ func (r *domainResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	var _, err = r.client.DeleteDomain(state.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Deleting Domain",
+			"Error deleting domain via API",
 			"Could not delete domain, unexpected error: "+err.Error(),
 		)
 		return

@@ -97,7 +97,7 @@ func (r *queueResource) Create(ctx context.Context, req resource.CreateRequest, 
 	payload, err := r.convertToApiModel(ctx, &plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error converting queue",
+			"Error converting queue to API model",
 			"Could not convert queue, unexpected error: "+err.Error(),
 		)
 		return
@@ -106,7 +106,7 @@ func (r *queueResource) Create(ctx context.Context, req resource.CreateRequest, 
 	q, err := r.client.CreateQueue(payload)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Creating Queue",
+			"Error creating queue via API",
 			"Could not create queue, unexpected error: "+err.Error(),
 		)
 		return
@@ -115,7 +115,7 @@ func (r *queueResource) Create(ctx context.Context, req resource.CreateRequest, 
 	q, err = r.client.GetQueue(q.Id)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading created Queue",
+			"Error reading queue via API",
 			"Could not read queue, unexpected error: "+err.Error(),
 		)
 		return
@@ -124,9 +124,9 @@ func (r *queueResource) Create(ctx context.Context, req resource.CreateRequest, 
 	err = r.convertFromApiModel(q, &plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error converting queue from api model",
-			"Unexpected error: "+err.Error(),
-		)
+			"Error converting queue received from API to internal model",
+			"Could not convert queue, unexpected error: "+err.Error())
+
 		return
 	}
 
@@ -145,8 +145,8 @@ func (r *queueResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	var q, err = r.client.GetQueue(state.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Queue",
-			fmt.Sprintf("Could not read queue %s, unexpected error: %s", state.Id.ValueString(), err.Error()),
+			"Error reading queue via API",
+			"Could not read queue, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -154,9 +154,9 @@ func (r *queueResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	err = r.convertFromApiModel(q, &state)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error converting queue from api model",
-			"Unexpected error: "+err.Error(),
-		)
+			"Error converting queue received from API to internal model",
+			"Could not convert queue, unexpected error: "+err.Error())
+
 		return
 	}
 
@@ -179,17 +179,26 @@ func (r *queueResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	payload, err := r.convertToApiModel(ctx, &plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error converting queue",
+			"Error converting queue to API model",
 			"Could not convert queue, unexpected error: "+err.Error(),
 		)
 		return
 	}
 
-	q, err := r.client.UpdateQueue(state.Id.ValueString(), payload)
+	_, err = r.client.UpdateQueue(state.Id.ValueString(), payload)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Updating Queue",
-			fmt.Sprintf("Could not update queue %s, unexpected error: %s", plan.Id.ValueString(), err.Error()),
+			"Error updating queue via API",
+			"Could not update queue, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	q, err := r.client.GetQueue(state.Id.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error reading queue via API",
+			"Could not read queue, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -197,9 +206,9 @@ func (r *queueResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	err = r.convertFromApiModel(q, &plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error converting queue from api model",
-			"Unexpected error: "+err.Error(),
-		)
+			"Error converting queue received from API to internal model",
+			"Could not convert queue, unexpected error: "+err.Error())
+
 		return
 	}
 
@@ -218,7 +227,7 @@ func (r *queueResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	var _, err = r.client.DeleteQueue(state.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Deleting Queue",
+			"Error deleting queue via API",
 			"Could not delete queue, unexpected error: "+err.Error(),
 		)
 		return

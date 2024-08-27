@@ -7,15 +7,17 @@ type ApiKeyRequest struct {
 }
 
 type ApiKeyScopes struct {
-	Channels  *ApiKeyScope `json:"channels,omitempty"`
-	Domains   *ApiKeyScope `json:"domains,omitempty"`
-	Events    *ApiKeyScope `json:"events,omitempty"`
-	Listeners *ApiKeyScope `json:"listeners,omitempty"`
-	Messages  *ApiKeyScope `json:"messages,omitempty"`
-	Queues    *ApiKeyScope `json:"queues,omitempty"`
-	Schemas   *ApiKeyScope `json:"schemas,omitempty"`
-	Stats     *ApiKeyScope `json:"stats,omitempty"`
-	Topics    *ApiKeyScope `json:"topics,omitempty"`
+	ApiClients    *ApiKeyScope `json:"api_clients,omitempty"`
+	Channels      *ApiKeyScope `json:"channels,omitempty"`
+	Domains       *ApiKeyScope `json:"domains,omitempty"`
+	Events        *ApiKeyScope `json:"events,omitempty"`
+	Listeners     *ApiKeyScope `json:"listeners,omitempty"`
+	Messages      *ApiKeyScope `json:"messages,omitempty"`
+	Queues        *ApiKeyScope `json:"queues,omitempty"`
+	Schemas       *ApiKeyScope `json:"schemas,omitempty"`
+	Stats         *ApiKeyScope `json:"stats,omitempty"`
+	Subscriptions *ApiKeyScope `json:"subscriptions,omitempty"`
+	Topics        *ApiKeyScope `json:"topics,omitempty"`
 }
 
 type ApiKeyScope struct {

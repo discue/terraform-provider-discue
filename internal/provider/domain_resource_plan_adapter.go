@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-func (r *domainResource) convertDomainToApiModel(_ctx context.Context, plan *DomainResourceModel) (client.DomainRequest, error) {
+func (r *domainResource) convertToApiModel(_ context.Context, plan *DomainResourceModel) (client.DomainRequest, error) {
 	return client.DomainRequest{
 		Alias:    plan.Alias.ValueString(),
 		Hostname: plan.Hostname.ValueString(),
@@ -20,7 +20,7 @@ func (r *domainResource) convertDomainToApiModel(_ctx context.Context, plan *Dom
 	}, nil
 }
 
-func (r *domainResource) convertDomainToInternalModel(d *client.DomainResponse, plan *DomainResourceModel) (*DomainResourceModel, error) {
+func (r *domainResource) convertFromApiModel(d *client.DomainResponse, plan *DomainResourceModel) (*DomainResourceModel, error) {
 	plan.Id = types.StringValue(d.Id)
 	plan.Alias = types.StringValue(d.Alias)
 	plan.Port = types.Int32Value(d.Port)

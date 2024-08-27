@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func (r *queueResource) convertToApiModel(_ctx context.Context, plan *QueueResourceModel) (client.Queue, error) {
+func (r *queueResource) convertToApiModel(_ context.Context, plan *QueueResourceModel) (client.Queue, error) {
 	return client.Queue{
 		Alias: plan.Alias.ValueString(),
 	}, nil

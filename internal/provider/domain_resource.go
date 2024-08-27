@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 	"terraform-provider-discue/internal/client"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
@@ -58,7 +59,7 @@ type DomainVerification struct {
 }
 
 func (r *domainResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_domain"
+	resp.TypeName = strings.Join([]string{req.ProviderTypeName, "domain"}, "_")
 }
 
 func (r *domainResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

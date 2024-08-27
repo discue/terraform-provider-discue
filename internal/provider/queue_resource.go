@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
 	"terraform-provider-discue/internal/client"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -36,7 +37,7 @@ type QueueResourceModel struct {
 }
 
 func (r *queueResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_queue"
+	resp.TypeName = strings.Join([]string{req.ProviderTypeName, "queue"}, "_")
 }
 
 func (r *queueResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

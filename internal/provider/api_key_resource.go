@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
 	"terraform-provider-discue/internal/client"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -25,7 +26,7 @@ var _ resource.Resource = &apiKeyResource{}
 var _ resource.ResourceWithConfigure = &apiKeyResource{}
 var _ resource.ResourceWithImportState = &apiKeyResource{}
 
-var ApiResources = []string{"Channels", "Domains", "Events", "Listeners", "Messages", "Queues", "Schemas", "Stats", "Topics"}
+var ApiResources = []string{"channels", "domains", "events", "listeners", "messages", "queues", "schemas", "stats", "topics"}
 
 func NewApiKeyResource() resource.Resource {
 	return &apiKeyResource{}
@@ -36,21 +37,21 @@ type apiKeyResource struct {
 }
 
 type apiKeyResourceModel struct {
-	Key    types.String       `tfsdk:"key"`
-	Id     types.String       `tfsdk:"id"`
-	Alias  types.String       `tfsdk:"alias"`
-	Status types.String       `tfsdk:"status"`
-	Scope  []apiKeyScopeModel `tfsdk:"scope"`
+	Key    types.String `tfsdk:"key"`
+	Id     types.String `tfsdk:"id"`
+	Alias  types.String `tfsdk:"alias"`
+	Status types.String `tfsdk:"status"`
+	Scopes types.List   `tfsdk:"scopes"`
 }
 
 type apiKeyScopeModel struct {
-	Resource string       `tfsdk:"resource"`
+	Resource types.String `tfsdk:"resource"`
 	Access   types.String `tfsdk:"access"`
 	Targets  types.List   `tfsdk:"targets"`
 }
 
 func (r *apiKeyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_api_key"
+	resp.TypeName = strings.Join([]string{req.ProviderTypeName, "api_key"}, "_")
 }
 
 func (r *apiKeyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -92,12 +93,16 @@ func (r *apiKeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			},
 			"key": schema.StringAttribute{
 				Computed:  true,
-				Sensitive: false,
+				Sensitive: true,
 			},
-		},
-		Blocks: map[string]schema.Block{
-			"scope": schema.ListNestedBlock{ // Use ListNestedBlock or SetNestedBlock
-				NestedObject: schema.NestedBlockObject{
+			"scopes": schema.ListNestedAttribute{
+				Optional: true,
+				Computed: true,
+				Validators: []validator.List{listvalidator.All(
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+				)},
+				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"resource": schema.StringAttribute{
 							Optional: true,
@@ -155,67 +160,47 @@ func (r *apiKeyResource) Configure(ctx context.Context, req resource.ConfigureRe
 	r.client = client
 }
 
-func convertScopes(ctx context.Context, plan apiKeyResourceModel) (*client.ApiKeyScopes, error) {
-	result := client.ApiKeyScopes{}
-
-	for _, scope := range plan.Scope {
-		access := scope.Access.ValueString()
-		targets, _ := TfTypesValueToList(scope.Targets)
-
-		setValueOf(&result, scope.Resource, &client.ApiKeyScope{
-			Access:  access,
-			Targets: targets,
-		})
-	}
-
-	return &result, nil
-}
-
 func (r *apiKeyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan apiKeyResourceModel
 	diags := req.Plan.Get(ctx, &plan)
+
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	key := client.ApiKeyRequest{
-		Alias:  plan.Alias.ValueString(),
-		Status: plan.Status.ValueString(),
+	payload, err := convertToApiModel(ctx, &plan)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error converting Key",
+			"Could not convert api key, unexpected error: "+err.Error(),
+		)
+		return
 	}
 
-	if len(plan.Scope) > 0 {
-		scopes, convertErr := convertScopes(ctx, plan)
-		if convertErr != nil {
-			resp.Diagnostics.AddError(
-				"Error Creating Api Key",
-				"Could not create api key, unexpected error: "+convertErr.Error(),
-			)
-			return
-		}
-		key.Scopes = scopes
-	}
-	tflog.Info(ctx, fmt.Sprintf("API key to be created %#v", key))
-
-	var cK, createErr = r.client.CreateApiKey(key)
-	if createErr != nil {
+	k, err := r.client.CreateApiKey(payload)
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Creating Api Key",
-			"Could not create api key, unexpected error: "+createErr.Error(),
+			"Could not create api key, unexpected error: "+err.Error(),
 		)
 		return
 	}
 
-	var k, gErr = r.client.GetApiKey(cK.Id)
-	if gErr != nil {
+	k, err = r.client.GetApiKey(k.Id)
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Created Api Key",
-			"Could not read api key, unexpected error: "+gErr.Error(),
+			"Could not read api key, unexpected error: "+err.Error(),
 		)
 		return
 	}
 
-	r.convert(k, &plan)
+	_, err = r.convertFromApiModel(k, &plan)
+	if err != nil {
+		resp.Diagnostics.AddError("Error converting API response", "Unexpected error: "+err.Error())
+		return
+	}
 	tflog.Info(ctx, fmt.Sprintf("Done Reading api client %s", plan))
 
 	diags = resp.State.Set(ctx, plan)
@@ -224,13 +209,14 @@ func (r *apiKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 
 func (r *apiKeyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state apiKeyResourceModel
+
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var d, err = r.client.GetApiKey(state.Id.ValueString())
+	k, err := r.client.GetApiKey(state.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Created Api Key",
@@ -239,7 +225,12 @@ func (r *apiKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	r.convert(d, &state)
+	_, err = r.convertFromApiModel(k, &state)
+	if err != nil {
+		resp.Diagnostics.AddError("Error converting API response", "Unexpected error: "+err.Error())
+		return
+	}
+	tflog.Info(ctx, fmt.Sprintf("Done Reading api client %s", state))
 
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
@@ -248,29 +239,37 @@ func (r *apiKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 func (r *apiKeyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan apiKeyResourceModel
 	diags := req.Plan.Get(ctx, &plan)
-
-	var state apiKeyResourceModel
-	req.State.Get(ctx, &state)
-
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	key := client.ApiKeyRequest{
-		Alias: plan.Alias.ValueString(),
+	var state apiKeyResourceModel
+	diags = req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	var k, err = r.client.UpdateApiKey(state.Id.ValueString(), key)
+	payload, err := convertToApiModel(ctx, &plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Updating Api Key",
-			fmt.Sprintf("Could not update api key %s, unexpected error: %s", plan.Id.ValueString(), err.Error()),
+			"Error converting Key",
+			"Could not convert api key, unexpected error: "+err.Error(),
 		)
 		return
 	}
 
-	k, err = r.client.GetApiKey(state.Id.ValueString())
+	k, err := r.client.UpdateApiKey(state.Id.ValueString(), payload)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Creating Api Key",
+			"Could not create api key, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	k, err = r.client.GetApiKey(k.Id)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Created Api Key",
@@ -278,10 +277,14 @@ func (r *apiKeyResource) Update(ctx context.Context, req resource.UpdateRequest,
 		)
 		return
 	}
+	_, err = r.convertFromApiModel(k, &state)
+	if err != nil {
+		resp.Diagnostics.AddError("Error converting API response", "Unexpected error: "+err.Error())
+		return
+	}
+	tflog.Info(ctx, fmt.Sprintf("Done Reading api client %s", state))
 
-	r.convert(k, &plan)
-
-	diags = resp.State.Set(ctx, plan)
+	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
 }
 
@@ -293,7 +296,7 @@ func (r *apiKeyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	var _, err = r.client.DeleteApiKey(state.Id.ValueString())
+	_, err := r.client.DeleteApiKey(state.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Deleting Api Key",

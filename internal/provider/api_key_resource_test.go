@@ -1,18 +1,42 @@
 package provider
 
 import (
+	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-func expectScope(resourceType string, name string, access string, target string) resource.TestCheckFunc {
-	return resource.TestCheckTypeSetElemNestedAttrs(resourceType, "scope.*", map[string]string{
+func testCheckScope(resourceType string, name string, access string, target string) resource.TestCheckFunc {
+	return resource.TestCheckTypeSetElemNestedAttrs(resourceType, "scopes.*", map[string]string{
 		"resource":  name,
 		"access":    access,
 		"targets.#": "1",
 		"targets.0": target,
 	})
+}
+
+func testCheckNoScope(resourceName string, scopeName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		scopesAttr := rs.Primary.Attributes["scopes.#"]
+		scopesCount, _ := strconv.Atoi(scopesAttr)
+
+		for i := 0; i < scopesCount; i++ {
+			resourceAttr := rs.Primary.Attributes[fmt.Sprintf("scopes.%d.resource", i)]
+			if resourceAttr == scopeName {
+				return fmt.Errorf("Found %s scope when it was not expected", scopeName)
+			}
+		}
+
+		return nil
+	}
 }
 
 func TestAccApiKeyResource(t *testing.T) {
@@ -22,31 +46,34 @@ func TestAccApiKeyResource(t *testing.T) {
 			// Create and Read testing
 			{
 				Config: providerConfig + `
-resource "discue_api_key" "test_api_key" {
+resource "discue_api_key" "test_alias" {
   alias = "my-first-api-key"
+  scopes = [{
+	  resource = "topics"
+	  access = "read"
+	  targets = ["*"]
+  }]
 }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					// Verify number of items
-					resource.TestCheckResourceAttr("discue_api_key.test_api_key", "alias", "my-first-api-key"),
-					resource.TestCheckResourceAttr("discue_api_key.test_api_key", "status", "enabled"),
-					// Verify dynamic values have any value set in the state.
-					resource.TestCheckResourceAttrSet("discue_api_key.test_api_key", "id"),
-					resource.TestCheckTypeSetElemNestedAttrs("discue_api_key.test_api_key", "scope.*", map[string]string{
-						"resource":  "Domains",
-						"access":    "read",
-						"targets.#": "1",
-						"targets.0": "*",
-					}), // resource.TestCheckResourceAttrSet("discue_api_key.test_api_key", "scopes.domains.access"),
-					// resource.TestCheckResourceAttrSet("discue_api_key.test_api_key", "verification.verified_at"),
-					// resource.TestCheckResourceAttrSet("discue_api_key.test_api_key", "challenge.https.%"),
-					// resource.TestCheckResourceAttrSet("discue_api_key.test_api_key", "challenge.https.file_content"),
-					// resource.TestCheckResourceAttrSet("discue_api_key.test_api_key", "challenge.https.file_name"),
+					resource.TestCheckResourceAttr("discue_api_key.test_alias", "alias", "my-first-api-key"),
+					resource.TestCheckResourceAttr("discue_api_key.test_alias", "status", "enabled"),
+					resource.TestCheckResourceAttrSet("discue_api_key.test_alias", "id"),
+
+					testCheckScope("discue_api_key.test_alias", "topics", "read", "*"),
+					testCheckNoScope("discue_api_key.test_alias", "channels"),
+					testCheckNoScope("discue_api_key.test_alias", "domains"),
+					testCheckNoScope("discue_api_key.test_alias", "events"),
+					testCheckNoScope("discue_api_key.test_alias", "listeners"),
+					testCheckNoScope("discue_api_key.test_alias", "messages"),
+					testCheckNoScope("discue_api_key.test_alias", "queues"),
+					testCheckNoScope("discue_api_key.test_alias", "schemas"),
+					testCheckNoScope("discue_api_key.test_alias", "stats"),
 				),
 			},
 			// ImportState testing
 			{
-				ResourceName:      "discue_api_key.test_api_key",
+				ResourceName:      "discue_api_key.test_alias",
 				ImportState:       true,
 				ImportStateVerify: true,
 				// The last_updated attribute does not exist in the HashiCups
@@ -56,62 +83,117 @@ resource "discue_api_key" "test_api_key" {
 			// Update and Read testing
 			{
 				Config: providerConfig + `
-resource "discue_api_key" "test_api_key" {
+resource "discue_api_key" "test_alias" {
   alias = "my-first-api-key-now"
-}
-`,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					// Verify number of items
-					resource.TestCheckResourceAttr("discue_api_key.test_api_key", "alias", "my-first-api-key-now"),
-					// Verify dynamic values have any value set in the state.
-					resource.TestCheckResourceAttrSet("discue_api_key.test_api_key", "id"),
-				),
-			},
-			{
-				Config: providerConfig + `
-resource "discue_api_key" "test_api_key_disabled" {
-  alias = "my-first-disabled-api-key"
-  status = "disabled"
-}
-`,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					// Verify number of items
-					resource.TestCheckResourceAttr("discue_api_key.test_api_key_disabled", "alias", "my-first-disabled-api-key"),
-					resource.TestCheckResourceAttr("discue_api_key.test_api_key_disabled", "status", "disabled"),
-					resource.TestCheckResourceAttrSet("discue_api_key.test_api_key_disabled", "id"),
-					// resource.TestCheckResourceAttrSet("discue_api_key.test_api_key_disabled", "scopes.domains.access"),
-					// resource.TestCheckResourceAttrSet("discue_api_key.test_api_key", "verification.verified_at"),
-					// resource.TestCheckResourceAttrSet("discue_api_key.test_api_key", "challenge.https.%"),
-					// resource.TestCheckResourceAttrSet("discue_api_key.test_api_key", "challenge.https.file_content"),
-					// resource.TestCheckResourceAttrSet("discue_api_key.test_api_key", "challenge.https.file_name"),
-				),
-			},
-			{
-				Config: providerConfig + `
-resource "discue_api_key" "test_only_domains_scope" {
-  alias = "my-first-scoped-api-key"
-  scope {
-	  resource = "Domains"
+  scopes = [{
+	  resource = "topics"
 	  access = "read"
 	  targets = ["*"]
-  }
+  }]
 }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					// Verify number of items
-					resource.TestCheckResourceAttr("discue_api_key.test_only_domains_scope", "alias", "my-first-scoped-api-key"),
-					resource.TestCheckTypeSetElemNestedAttrs("discue_api_key.test_only_domains_scope", "scope.*", map[string]string{
-						"resource":  "Domains",
-						"access":    "read",
-						"targets.#": "1",
-						"targets.0": "*",
-					}),
-					resource.TestCheckResourceAttrSet("discue_api_key.test_only_domains_scope", "id"),
-					resource.TestCheckNoResourceAttr("discue_api_key.test_only_domains_scope", "scopes.queues.access"),
-					// resource.TestCheckResourceAttrSet("discue_api_key.test_api_key", "verification.verified_at"),
-					// resource.TestCheckResourceAttrSet("discue_api_key.test_api_key", "challenge.https.%"),
-					// resource.TestCheckResourceAttrSet("discue_api_key.test_api_key", "challenge.https.file_content"),
-					// resource.TestCheckResourceAttrSet("discue_api_key.test_api_key", "challenge.https.file_name"),
+					resource.TestCheckResourceAttr("discue_api_key.test_alias", "alias", "my-first-api-key-now"),
+					resource.TestCheckResourceAttrSet("discue_api_key.test_alias", "id"),
+					resource.TestCheckResourceAttr("discue_api_key.test_alias", "status", "enabled"),
+
+					testCheckScope("discue_api_key.test_alias", "topics", "read", "*"),
+					testCheckNoScope("discue_api_key.test_alias", "channels"),
+					testCheckNoScope("discue_api_key.test_alias", "domains"),
+					testCheckNoScope("discue_api_key.test_alias", "events"),
+					testCheckNoScope("discue_api_key.test_alias", "listeners"),
+					testCheckNoScope("discue_api_key.test_alias", "messages"),
+					testCheckNoScope("discue_api_key.test_alias", "queues"),
+					testCheckNoScope("discue_api_key.test_alias", "schemas"),
+					testCheckNoScope("discue_api_key.test_alias", "stats"),
+				),
+			},
+			{
+				Config: providerConfig + `
+resource "discue_api_key" "test_status" {
+  alias = "my-first-disabled-api-key"
+  status = "disabled"
+  scopes = [{
+	  resource = "topics"
+	  access = "read"
+	  targets = ["*"]
+  }]
+}
+`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("discue_api_key.test_status", "alias", "my-first-disabled-api-key"),
+					resource.TestCheckResourceAttr("discue_api_key.test_status", "status", "disabled"),
+					resource.TestCheckResourceAttrSet("discue_api_key.test_status", "id"),
+				),
+			},
+			{
+				Config: providerConfig + `
+resource "discue_api_key" "test_status" {
+  alias = "my-first-disabled-api-key"
+  status = "enabled"
+  scopes = [{
+	  resource = "topics"
+	  access = "read"
+	  targets = ["*"]
+  }]
+}
+`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("discue_api_key.test_status", "alias", "my-first-disabled-api-key"),
+					resource.TestCheckResourceAttr("discue_api_key.test_status", "status", "enabled"),
+					resource.TestCheckResourceAttrSet("discue_api_key.test_status", "id"),
+				),
+			},
+			{
+				Config: providerConfig + `
+resource "discue_api_key" "test_scopes" {
+  alias = "my-first-scoped-api-key"
+  scopes = [{
+	  resource = "domains"
+	  access = "read"
+	  targets = ["*"]
+  }]
+}
+`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("discue_api_key.test_scopes", "alias", "my-first-scoped-api-key"),
+					resource.TestCheckResourceAttrSet("discue_api_key.test_scopes", "id"),
+
+					testCheckScope("discue_api_key.test_scopes", "domains", "read", "*"),
+					testCheckNoScope("discue_api_key.test_scopes", "channels"),
+					testCheckNoScope("discue_api_key.test_scopes", "events"),
+					testCheckNoScope("discue_api_key.test_scopes", "listeners"),
+					testCheckNoScope("discue_api_key.test_scopes", "messages"),
+					testCheckNoScope("discue_api_key.test_scopes", "queues"),
+					testCheckNoScope("discue_api_key.test_scopes", "schemas"),
+					testCheckNoScope("discue_api_key.test_scopes", "stats"),
+					testCheckNoScope("discue_api_key.test_scopes", "topics"),
+				),
+			},
+			{
+				Config: providerConfig + `
+resource "discue_api_key" "test_scopes" {
+  alias = "my-first-scoped-api-key"
+  scopes = [{
+	  resource = "channels"
+	  access = "write"
+	  targets = ["*"]
+  }]
+}
+`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("discue_api_key.test_scopes", "alias", "my-first-scoped-api-key"),
+					resource.TestCheckResourceAttrSet("discue_api_key.test_scopes", "id"),
+
+					testCheckScope("discue_api_key.test_scopes", "channels", "write", "*"),
+					testCheckNoScope("discue_api_key.test_scopes", "domains"),
+					testCheckNoScope("discue_api_key.test_scopes", "events"),
+					testCheckNoScope("discue_api_key.test_scopes", "listeners"),
+					testCheckNoScope("discue_api_key.test_scopes", "messages"),
+					testCheckNoScope("discue_api_key.test_scopes", "queues"),
+					testCheckNoScope("discue_api_key.test_scopes", "schemas"),
+					testCheckNoScope("discue_api_key.test_scopes", "stats"),
+					testCheckNoScope("discue_api_key.test_scopes", "topics"),
 				),
 			},
 		},

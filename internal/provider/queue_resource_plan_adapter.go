@@ -3,10 +3,17 @@
 package provider
 
 import (
+	"context"
 	"terraform-provider-discue/internal/client"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
+
+func (r *queueResource) convertQueueToApiModel(_ctx context.Context, plan *QueueResourceModel) (client.Queue, error) {
+	return client.Queue{
+		Alias: plan.Alias.ValueString(),
+	}, nil
+}
 
 func (r *queueResource) convertQueueToInternalModel(d *client.Queue, plan *QueueResourceModel) error {
 	plan.Id = types.StringValue(d.Id)

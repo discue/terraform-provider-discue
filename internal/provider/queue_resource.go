@@ -94,11 +94,16 @@ func (r *queueResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	queue := client.Queue{
-		Alias: plan.Alias.ValueString(),
+	payload, err := r.convertQueueToApiModel(ctx, &plan)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error converting queue",
+			"Could not convert queue, unexpected error: "+err.Error(),
+		)
+		return
 	}
 
-	var q, err = r.client.CreateQueue(queue)
+	q, err := r.client.CreateQueue(payload)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Creating Queue",
@@ -171,11 +176,16 @@ func (r *queueResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	queue := client.Queue{
-		Alias: plan.Alias.ValueString(),
+	payload, err := r.convertQueueToApiModel(ctx, &plan)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error converting queue",
+			"Could not convert queue, unexpected error: "+err.Error(),
+		)
+		return
 	}
 
-	var q, err = r.client.UpdateQueue(state.Id.ValueString(), queue)
+	q, err := r.client.UpdateQueue(state.Id.ValueString(), payload)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Updating Queue",

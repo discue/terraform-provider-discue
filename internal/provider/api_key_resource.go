@@ -5,9 +5,9 @@ package provider
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"terraform-provider-discue/internal/client"
+	v "terraform-provider-discue/internal/validators"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -62,11 +62,7 @@ func (r *apiKeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Computed:  true,
 				Sensitive: false,
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(21, 22),
-					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^[useandom26T198340PX75pxJACKVERYMINDBUSHWOLFGQZbfghjklqvwyzrict-]{21}$`),
-						"must match the pattern for string id values",
-					),
+					v.ValidResourceId(""),
 				},
 			},
 			"alias": schema.StringAttribute{
@@ -74,11 +70,7 @@ func (r *apiKeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Sensitive:           false,
 				MarkdownDescription: "The name/alias of the resource. This should be unique.",
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(4, 64),
-					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^[a-zA-Z0-9.\-\\/]{4,64}$`),
-						"must match the pattern for string name/alias values",
-					),
+					v.ValidResourceAlias(""),
 				},
 			},
 			"status": schema.StringAttribute{
@@ -128,10 +120,7 @@ func (r *apiKeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 								listvalidator.ValueStringsAre(
 									stringvalidator.Any(
 										stringvalidator.OneOf("*"),
-										stringvalidator.RegexMatches(
-											regexp.MustCompile(`^[useandom26T198340PX75pxJACKVERYMINDBUSHWOLFGQZbfghjklqvwyzrict-]{21}$`),
-											"must match the pattern for string id values",
-										),
+										v.ValidResourceId(""),
 									),
 								),
 							},

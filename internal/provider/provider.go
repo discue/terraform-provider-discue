@@ -125,6 +125,7 @@ func (p *discueProvider) Resources(_ context.Context) []func() resource.Resource
 	return []func() resource.Resource{
 		NewApiKeyResource,
 		NewDomainResource,
+		NewListenerResource,
 		NewQueueResource,
 	}
 }

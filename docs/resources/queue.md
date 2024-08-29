@@ -27,4 +27,4 @@ resource "discue_queue" "example" {
 
 ### Read-Only
 
-- `id` (String) The ID of this resource.
+- `id` (String) The unique id of the resource.

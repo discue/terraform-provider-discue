@@ -12,7 +12,6 @@ import (
 
 var _ validator.String = urlValidator{}
 
-// urlValidator validates that a string Attribute's value matches the specified regular expression.
 type urlValidator struct {
 	message string
 }

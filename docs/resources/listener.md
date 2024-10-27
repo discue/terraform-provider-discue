@@ -38,7 +38,7 @@ resource "discue_listener" "test_listener" {
 ### Required
 
 - `alias` (String) The name/alias of the resource. This should be unique.
-- `liveness_url` (String) The URL used to check whether the listener is still live.
+- `liveness_url` (String) The URL used to check whether the listener is still live. Depends on a `
 - `notify_url` (String) The URL used to send messages to the listener.
 - `queue_id` (String) The id of the queue this listener will receive messages from.
 

@@ -17,15 +17,9 @@ builds:
     ldflags:
       - "-s -w -X main.version={{.Version}} -X main.commit={{.Commit}}"
     goos:
-      - freebsd
       - windows
       - linux
       - darwin
-    goarch:
-      - amd64
-      - "386"
-      - arm
-      - arm64
     ignore:
       - goos: darwin
         goarch: "386"
@@ -103,6 +97,16 @@ changelog:
   # any other number: max length.
   abbrev: -1
 
+  filters:
+    exclude:
+      - "^docs:"
+      - "^style:"
+      - "^tests:"
+      - "^test:"
+      - "^Merge pull request"
+      - "^Merge branch"
+      - "^Revert "
+
   # Group commits messages by given regex and title.
   # Order value defines the order of the groups.
   # Providing no regex means all commits will be grouped under the default group.
@@ -121,9 +125,9 @@ changelog:
       order: 1
     - title: "Chores"
       regexp: '^.*?chore(\([[:word:]]+\))??!?:.+$'
-      order: 1
+      order: 2
     - title: "Refactorings"
       regexp: '^.*?refactor(\([[:word:]]+\))??!?:.+$'
-      order: 1
+      order: 3
     - title: Others
       order: 999

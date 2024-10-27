@@ -65,10 +65,11 @@ func (r *domainResource) Metadata(ctx context.Context, req resource.MetadataRequ
 
 func (r *domainResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Domain resource",
+		MarkdownDescription: "A domain resource is a prerequisite for receiving messages. This is a security measure to prevent messages being sent through [discue.io](https://www.discue.io) without knowledge of the recipient. The domain configuration includes a hostname and port. Both values cannot be changed after creation. The API will return instructions on how to validate the domain as a response to the creation request.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The unique id of the resource.",
 				Validators: []validator.String{
 					v.ValidResourceId(""),
 				},
@@ -82,7 +83,7 @@ func (r *domainResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			},
 			"hostname": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The target hostname that will receive messages from listeners and channels.",
+				MarkdownDescription: "The target hostname that will receive messages from listeners and channels. Only provide the DNS hostname portion here. The protocol will be added by the API automatically.",
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(4, 253),
 					stringvalidator.RegexMatches(
@@ -102,46 +103,45 @@ func (r *domainResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 			},
 			"verification": schema.SingleNestedAttribute{
-				Computed:  true,
-				Sensitive: false,
+				Computed:    true,
+				Description: "Describes the status of the domain validation. ",
 				Attributes: map[string]schema.Attribute{
 					"verified": schema.BoolAttribute{
-						Required:    true,
+						Computed:    true,
 						Description: "True if the domain was successfully verified",
 					},
 					"verified_at": schema.Int64Attribute{
-						Required:    true,
+						Computed:    true,
 						Description: "Date time in MS showing since when the domain has been verified",
 					},
 				},
 			},
 			"challenge": schema.SingleNestedAttribute{
 				Computed:    true,
-				Sensitive:   false,
-				Description: "A Domain challenges enables a domain to receive messages. This is a security measure to prevent other domains receiving unwanted messages.",
+				Description: "A Domain challenge enables a domain to receive messages. This is a security measure to prevent other domains receiving unwanted messages. The API will send a HTTP Get request to https://{hostname}:{port}/{context_path}/{file_name} and will expect the respones to strictly equal {file_content}. If the content matches, the domain will me marked as verified.",
 				Attributes: map[string]schema.Attribute{
 					"https": schema.SingleNestedAttribute{
 						Computed:    true,
 						Description: "The HTTP challenge is currently the only way to verify a domain. This object contains all the relevant information for the client to pass the HTTP challenge.",
 						Attributes: map[string]schema.Attribute{
 							"file_content": schema.StringAttribute{
-								Required:    true,
+								Computed:    true,
 								Description: "The file content we expect for the http to succeed.",
 							},
 							"file_name": schema.StringAttribute{
-								Required:    true,
+								Computed:    true,
 								Description: "The file name we will request for the http challenge.",
 							},
 							"context_path": schema.StringAttribute{
-								Required:    true,
+								Computed:    true,
 								Description: "The context path we will use to proceed with the domain challenge.",
 							},
 							"created_at": schema.Int64Attribute{
-								Required:    true,
+								Computed:    true,
 								Description: "A timestamp representing the date time the domain challenge was created.",
 							},
 							"expires_at": schema.Int64Attribute{
-								Required:    true,
+								Computed:    true,
 								Description: "A timestamp representing the date time the domain challenge will expire.",
 							},
 						},

@@ -56,40 +56,42 @@ func (r *apiKeyResource) Metadata(ctx context.Context, req resource.MetadataRequ
 
 func (r *apiKeyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Api Key resource",
+		Description: "API keys are necessary for creating, updating and deleting other resources such as queues, listeners, and messages in a machine-to-machine context. Each API key can have specific scopes defined to limit access and enhance security, ensuring that only authorized operations can be performed.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed:  true,
-				Sensitive: false,
+				Computed:    true,
+				Description: "The unique id of the resource.",
 				Validators: []validator.String{
 					v.ValidResourceId(""),
 				},
 			},
 			"alias": schema.StringAttribute{
-				Required:            true,
-				Sensitive:           false,
-				MarkdownDescription: "The name/alias of the resource. This should be unique.",
+				Required:    true,
+				Sensitive:   false,
+				Description: "The name/alias of the resource. This should be unique.",
 				Validators: []validator.String{
 					v.ValidResourceAlias(""),
 				},
 			},
 			"status": schema.StringAttribute{
-				Optional:            true,
-				Computed:            true,
-				Sensitive:           false,
-				Default:             stringdefault.StaticString("enabled"),
-				MarkdownDescription: "The status of the api key. Default is\"enabled\".",
+				Optional:    true,
+				Computed:    true,
+				Sensitive:   false,
+				Default:     stringdefault.StaticString("enabled"),
+				Description: "The status of the api key. Default is\"enabled\".",
 				Validators: []validator.String{
 					stringvalidator.OneOf("enabled", "disabled"),
 				},
 			},
 			"key": schema.StringAttribute{
-				Computed:  true,
-				Sensitive: true,
+				MarkdownDescription: "The string representation of the API key. Only once after creation will the API return the whole API key. Afterward only a prefix of a few characters gets returned. Marked as sensitive to prevent leakage. See also: [api-overview#authentication](https://docs.discue.io/api-overview/#authentication)",
+				Computed:            true,
+				Sensitive:           true,
 			},
 			"scopes": schema.ListNestedAttribute{
-				Optional: true,
-				Computed: true,
+				Optional:    true,
+				Computed:    true,
+				Description: "Scopes describe which resources can be access and what kind of access (read/write) was granted. If `targets` array is empty, access to all resources of the defined domain will be granted. Otherwise - if targets is a list of resource IDs - only access to resources with the given ids will be allowed.",
 				Validators: []validator.List{listvalidator.All(
 					listvalidator.IsRequired(),
 					listvalidator.SizeAtLeast(1),
@@ -97,16 +99,18 @@ func (r *apiKeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"resource": schema.StringAttribute{
-							Optional: true,
-							Computed: true,
+							Optional:    true,
+							Computed:    true,
+							Description: "The type of resources this API key will be allowed to access.",
 							Validators: []validator.String{
 								stringvalidator.OneOf(ApiResources...),
 							},
 						},
 						"access": schema.StringAttribute{
-							Optional: true,
-							Computed: true,
-							Default:  stringdefault.StaticString("write"),
+							Optional:    true,
+							Computed:    true,
+							Description: "The access level that will be granted to the resource. Defaults to `write`.",
+							Default:     stringdefault.StaticString("write"),
 							Validators: []validator.String{
 								stringvalidator.OneOf("read", "write"),
 							},
@@ -115,6 +119,7 @@ func (r *apiKeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 							ElementType: types.StringType,
 							Optional:    true,
 							Computed:    true,
+							Description: "The target resources this API key will be allowed to access. Either a list of resource IDs or a wildcard. Defaults to `[\"*\"].`",
 							Default:     listdefault.StaticValue(types.ListValueMust(types.StringType, []attr.Value{types.StringValue("*")})),
 							Validators: []validator.List{
 								listvalidator.ValueStringsAre(

@@ -53,7 +53,7 @@ func (r *listenerResource) Schema(ctx context.Context, req resource.SchemaReques
 			},
 			"liveness_url": schema.StringAttribute{
 				Required:    true,
-				Description: "The URL used to check whether the listener is still live.",
+				Description: "The URL used to check whether the listener is still live. Depends on a `",
 				Validators: []validator.String{
 					stringvalidator.All(
 						stringvalidator.LengthBetween(4, 253),

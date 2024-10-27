@@ -99,6 +99,9 @@ changelog:
 
   filters:
     exclude:
+      - "^chore:(ci)"
+      - "^chore:(deps)"
+      - "^chore:(deps-dev)"
       - "^docs:"
       - "^style:"
       - "^tests:"

@@ -8,6 +8,8 @@ on:
     paths-ignore:
       - 'README.md'
   push:
+    tags-ignore: 
+      - '*' 
     paths-ignore:
       - 'README.md'
 

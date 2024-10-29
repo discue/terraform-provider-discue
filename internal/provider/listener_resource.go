@@ -42,7 +42,8 @@ func (r *listenerResource) Metadata(ctx context.Context, req resource.MetadataRe
 
 func (r *listenerResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Listener resource",
+		Description:         "Listener resource",
+		MarkdownDescription: `Listeners are the endpoint for receiving messages. Each listener has a liveness URL and a notify URL. The liveness URL is used to check whether the listener is still live. The notify URL is used to send messages to the listener. The listener will be marked as inactive if the liveness URL does not respond within a certain time frame.`,
 		Attributes: map[string]schema.Attribute{
 			"alias": schema.StringAttribute{
 				Required:    true,

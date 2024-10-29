@@ -41,7 +41,8 @@ func (r *queueResource) Metadata(ctx context.Context, req resource.MetadataReque
 
 func (r *queueResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Queue resource",
+		MarkdownDescription: "A queue resource is a prerequisite for creating listeners. It acts as a container for messages, ensuring that they are delivered to the correct destination. Each queue can have multiple listeners associated with it, allowing for flexible message routing and distribution.",
+		Description:         "Queue resource",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:    true,

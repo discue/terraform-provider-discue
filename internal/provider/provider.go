@@ -38,16 +38,23 @@ func (p *discueProvider) Metadata(_ context.Context, _ provider.MetadataRequest,
 
 func (p *discueProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		Description: "The discue provider can be used to manage discue resources.",
+		MarkdownDescription: `The discue can be used to manage your [discue.io](https://www.discue.io/) infrastructure.
+
+To learn the basics of Terraform, follow the hands-on
+[tutorials](https://developer.hashicorp.com/terraform/tutorials/configuration-language).
+
+To learn more about about discue checkout the [website](https://www.discue.io/) or the discue [documentation](https://docs.discue.io/).`,
 		Attributes: map[string]schema.Attribute{
 			"api_key": schema.StringAttribute{
 				Sensitive:   true,
 				Optional:    true,
-				Description: "The API key used to access discue.io resources.",
+				Description: "The API key used to access discue.io resources. The api key can also be set via environment variable `DISCUE_API_KEY`.",
 			},
 			"api_endpoint": schema.StringAttribute{
-				Optional:    true,
-				Required:    false,
-				Description: "The API endpoint used to access discue.io resources.",
+				Optional:            true,
+				Required:            false,
+				MarkdownDescription: "The API endpoint used to access discue.io resources. Defaults to `https://api.discue.io.`",
 			},
 		},
 	}

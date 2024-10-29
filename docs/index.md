@@ -3,12 +3,20 @@
 page_title: "discue Provider"
 subcategory: ""
 description: |-
-  
+  The discue can be used to manage your discue.io https://www.discue.io/ infrastructure.
+  To learn the basics of Terraform, follow the hands-on
+  tutorials https://developer.hashicorp.com/terraform/tutorials/configuration-language.
+  To learn more about about discue checkout the website https://www.discue.io/ or the discue documentation https://docs.discue.io/.
 ---
 
 # discue Provider
 
+The discue can be used to manage your [discue.io](https://www.discue.io/) infrastructure.
 
+To learn the basics of Terraform, follow the hands-on
+[tutorials](https://developer.hashicorp.com/terraform/tutorials/configuration-language).
+
+To learn more about about discue checkout the [website](https://www.discue.io/) or the discue [documentation](https://docs.discue.io/).
 
 ## Example Usage
 
@@ -23,5 +31,5 @@ provider "discue" {
 
 ### Optional
 
-- `api_endpoint` (String) The API endpoint used to access discue.io resources.
-- `api_key` (String, Sensitive) The API key used to access discue.io resources.
+- `api_endpoint` (String) The API endpoint used to access discue.io resources. Defaults to `https://api.discue.io.`
+- `api_key` (String, Sensitive) The API key used to access discue.io resources. The api key can also be set via environment variable `DISCUE_API_KEY`.

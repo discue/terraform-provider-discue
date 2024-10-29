@@ -3,12 +3,12 @@
 page_title: "discue_listener Resource - discue"
 subcategory: ""
 description: |-
-  Listener resource
+  Listeners are the endpoint for receiving messages. Each listener has a liveness URL and a notify URL. The liveness URL is used to check whether the listener is still live. The notify URL is used to send messages to the listener. The listener will be marked as inactive if the liveness URL does not respond within a certain time frame.
 ---
 
 # discue_listener (Resource)
 
-Listener resource
+Listeners are the endpoint for receiving messages. Each listener has a liveness URL and a notify URL. The liveness URL is used to check whether the listener is still live. The notify URL is used to send messages to the listener. The listener will be marked as inactive if the liveness URL does not respond within a certain time frame.
 
 ## Example Usage
 

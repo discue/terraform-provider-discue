@@ -3,12 +3,12 @@
 page_title: "discue_queue Resource - discue"
 subcategory: ""
 description: |-
-  Queue resource
+  A queue resource is a prerequisite for creating listeners. It acts as a container for messages, ensuring that they are delivered to the correct destination. Each queue can have multiple listeners associated with it, allowing for flexible message routing and distribution.
 ---
 
 # discue_queue (Resource)
 
-Queue resource
+A queue resource is a prerequisite for creating listeners. It acts as a container for messages, ensuring that they are delivered to the correct destination. Each queue can have multiple listeners associated with it, allowing for flexible message routing and distribution.
 
 ## Example Usage
 

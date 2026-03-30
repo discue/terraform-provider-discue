@@ -69,7 +69,11 @@ func (c *Client) executeRequest(requestOptions RequestOptions) ([]byte, error) {
 		return nil, err
 	}
 
-	defer res.Body.Close()
+	defer func() {
+		if cerr := res.Body.Close(); cerr != nil {
+			// ignore close errors intentionally; if needed, replace with logging
+		}
+	}()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {

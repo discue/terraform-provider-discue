@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -euxo pipefail
+set -eux
 
 # Start test server in background and ensure it's killed on exit (success or failure)
 (cd test-server && go run .) &

@@ -70,6 +70,7 @@ func (c *Client) executeRequest(requestOptions RequestOptions) ([]byte, error) {
 	}
 
 	defer func() {
+		//nolint:all
 		if cerr := res.Body.Close(); cerr != nil {
 			// ignore close errors intentionally; if needed, replace with logging
 		}

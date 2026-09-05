@@ -34,7 +34,7 @@ func setValueOf(itf interface{}, key string, value any) error {
 
 func getFieldByName(itf interface{}, key string) reflect.Value {
 	v := reflect.ValueOf(itf)
-	if v.Kind() == reflect.Ptr {
+	if v.Kind() == reflect.Pointer {
 		v = v.Elem()
 	}
 
@@ -47,7 +47,7 @@ func getFieldByName(itf interface{}, key string) reflect.Value {
 
 func checkFieldExists(itf interface{}, fieldName string) bool {
 	val := reflect.ValueOf(itf)
-	if val.Kind() == reflect.Ptr {
+	if val.Kind() == reflect.Pointer {
 		val = val.Elem()
 	}
 

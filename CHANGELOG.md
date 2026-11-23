@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.2](https://github.com/discue/terraform-provider-discue/compare/v1.0.1...v1.0.2) (2026-11-23)
+
+
+### Miscellaneous Chores
+
+* **deps:** bump actions/setup-go from 6.4.0 to 7.1.0 ([b5c064b](https://github.com/discue/terraform-provider-discue/commit/b5c064be2fbbf9d96690160df97cedacbfb63286))
+* **deps:** bump actions/setup-go from 6.4.0 to 7.1.0 ([43c473e](https://github.com/discue/terraform-provider-discue/commit/43c473ec96484d3b4105dc07c5c3fe448a58f425))
+
 ## [1.0.1](https://github.com/discue/terraform-provider-discue/compare/v1.0.0...v1.0.1) (2026-10-22)
 
 
